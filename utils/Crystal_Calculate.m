@@ -194,7 +194,7 @@ elseif strcmpi(crystal.QPM,'yes')
         crystal.Period = Poling(inx).*1e-6;
         f = gcf;
         Tit = f.Children.Title.String;
-        deff =sscanf(Tit{2},'T = 300.00 K, Pol.(s,i,p)=ZZZ, d_{eff} = %f pm/V');
+        deff =sscanf(Tit{2},['T = 300.00 K, Pol.(s,i,p)=',pol,', d_{eff} = %f pm/V']);
         % pol =sscanf(Tit{2},'T = 300.00 K, Pol.(s,i,p)=%c, d_{eff} = deff pm/V');
          
         % run gvm calculation
@@ -269,7 +269,7 @@ elseif strcmpi(crystal.QPM,'yes')
     plot(lam0.s*1e9,GDD_signal,'*g')
     grid on;
     title({[strcat(num2str(round(lam0.i.*1e9)),'nm Idler','    |',num2str(round(lam0.s.*1e9)),'nm Signal  |',Tit{1})],Tit{2}})
-    
+    drawnow
 end
     
     
