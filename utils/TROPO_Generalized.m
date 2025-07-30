@@ -11,8 +11,10 @@ arguments
    options.SweepResonance ='p'; % Sweep p for pump, s for signal, i for idler
    options.SweepDir = -sign(res.delta_p); % if pos sweep towards negative if negative sweep towards positive
    options.Delta_delta = 2*abs([res.delta_p]); % Default delta is from delta_p0 to -delta_p0 if sweep speed is enabled 
+   options.offset_delta = 0;
    options.name =  strcat(crystal.name,'lamp_',num2str(round(lam0.p*1e9)),'lams_',num2str(round(lam0.s*1e9)),'lami_',num2str(round(lam0.i*1e9)),'dk_',num2str(crystal.dk./pi),'pi','Ip0',num2str(I0.p));
    options.save = 0;
+   
 end
 % bright-bright
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-----general definition-----%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,8 +63,8 @@ else
     % is calculated from the initial delta_p, delta_s, delta_i, and dk
     
     if resPumped == 1
-        detunings(2,:) = detunings(1,:).*res.delta_s./res.delta_p;
-        detunings(3,:) = detunings(1,:) - detunings(2,:)-dk*L;
+        detunings(2,:) = detunings(1,:).*(res.delta_s+options.offset_delta)./res.delta_p-options.offset_delta;
+        detunings(3,:) = detunings(1,:) - detunings(2,:)-dk*L-2*options.offset_delta;
     elseif resPumped == 2
         detunings(1,:) = detunings(2,:).*res.delta_p./res.delta_s;
         detunings(3,:) = detunings(1,:) - detunings(2,:)-dk*L;  
@@ -114,17 +116,14 @@ kappa_s = sqrt(2)*w_s*deff1/sqrt(n_p*n_s*n_i*c^3*eps_0*Ac);
 kappa_i = sqrt(2)*w_i*deff1/sqrt(n_p*n_s*n_i*c^3*eps_0*Ac);
 
 
-%     kappa_p = 156.6925;
-%     kappa_s = 65.587;
-%     kappa_i = 91.1055;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tww= beta1_p*L;      % time window, related to the roundtrip time of the pump 
+tww= beta1_p*L*2;      % time window, related to the roundtrip time of the pump 
 h = [-Nw/2:Nw/2-1];
 dt = tww./Nw;     
 t = h.*dt;
-w = 1/(dt*Nw)*h;
-dw = 1/(dt*Nw);                                                                                     
+w = 2*pi/(dt*Nw)*h;
+dw = 2*pi/(dt*Nw);                                                                                     
 z = linspace(0,L,Nzfi);  % PPLN1                                
 dz = mean(diff(z));      % PPLN1                                                           
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,9 +154,9 @@ As00 = sqrt(I0.s)*ones(1,Nw) + sqrt(I0.s_seed)*exp(-2*sqrt(2)*(t/tseed).^2);
 Ai00 = sqrt(I0.i)*ones(1,Nw) + sqrt(I0.i_seed)*exp(-2*sqrt(2)*(t/tseed).^2);  
 
 % Initialize
-Ap = noise*exp(2*pi*1j*rand(size(Ap0)));
-As = noise*exp(2*pi*1j*rand(size(As0)));
-Ai = noise*exp(2*pi*1j*rand(size(Ai0)));
+Ap = noise*exp(2*pi*1j*rand(size(Ap0)))+Ap00;
+As = noise*exp(2*pi*1j*rand(size(As0)))+As00;
+Ai = noise*exp(2*pi*1j*rand(size(Ai0)))+Ai00;
 
 LP = zeros(Nrt,Nw);
 LS = zeros(Nrt,Nw);
@@ -166,7 +165,7 @@ AZp = zeros(Nzfi,Nw);
 AZs = zeros(Nzfi,Nw);
 AZi = zeros(Nzfi,Nw);
 
-wbd = 2*pi*12E12;
+wbd = 2*pi*9E12;
 BD = fftshift(exp(-(w/wbd).^8));
 BDt = ones(size(BD));
 
@@ -186,13 +185,13 @@ for indrt = 1:Nrt
     detunes = detunings(2,indrt);
     detunei = detunings(3,indrt);
     if indrt<50
-        Ap = (1-sqrt(Rp)).*Ap00 + sqrt(Rp)*Ap*exp(-1j*detunep) + noise*exp(2*pi*1j*rand(size(Ap)));
-        As = (1-sqrt(Rs)).*As00 + sqrt(Rs)*As*exp(-1j*detunes) + noise*exp(2*pi*1j*rand(size(As)));
-        Ai = (1-sqrt(Ri)).*Ai00 + sqrt(Ri)*Ai*exp(-1j*detunei) + noise*exp(2*pi*1j*rand(size(Ai)));
+        Ap = (sqrt(1-Rp)).*Ap00 + sqrt(Rp)*Ap*exp(-1j*detunep) + noise*exp(2*pi*1j*rand(size(Ap)));
+        As = (sqrt(1-Rs)).*As00 + sqrt(Rs)*As*exp(-1j*detunes) + noise*exp(2*pi*1j*rand(size(As)));
+        Ai = (sqrt(1-Ri)).*Ai00 + sqrt(Ri)*Ai*exp(-1j*detunei) + noise*exp(2*pi*1j*rand(size(Ai)));
     else
-        Ap = (1-sqrt(Rp)).*Ap0 + sqrt(Rp)*Ap*exp(-1j*detunep) + noise*exp(2*pi*1j*rand(size(Ap)));
-        As = (1-sqrt(Rs)).*As0 + sqrt(Rs)*As*exp(-1j*detunes) + noise*exp(2*pi*1j*rand(size(As)));
-        Ai = (1-sqrt(Ri)).*Ai0 + sqrt(Ri)*Ai*exp(-1j*detunei) + noise*exp(2*pi*1j*rand(size(Ai)));
+        Ap = (sqrt(1-Rp)).*Ap0 + sqrt(Rp)*Ap*exp(-1j*detunep) + noise*exp(2*pi*1j*rand(size(Ap)));
+        As = (sqrt(1-Rs)).*As0 + sqrt(Rs)*As*exp(-1j*detunes) + noise*exp(2*pi*1j*rand(size(As)));
+        Ai = (sqrt(1-Ri)).*Ai0 + sqrt(Ri)*Ai*exp(-1j*detunei) + noise*exp(2*pi*1j*rand(size(Ai)));
     end
 
     % Propagation (1st half), split-step Fourier method and

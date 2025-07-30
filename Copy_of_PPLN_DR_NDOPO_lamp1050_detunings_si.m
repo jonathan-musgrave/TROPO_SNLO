@@ -8,7 +8,7 @@ N.z  = 40; % LNL/N.z = dz;
 lam0.p = 1050e-9;
 lam0.s = 1550e-9;
 I0.p = 3.8; I0.s = 0; I0.i = 0; % CW pump Powers
-I0.p_seed = 0; I0.s_seed = I0.p; I0.i_seed = I0.p; % Pulse seeding power
+I0.p_seed = ; I0.s_seed = I0.p; I0.i_seed = I0.p; % Pulse seeding power
 I0.t_seed = 1e-12; % FWHM of pulse seed
 
 % Resonator construction
