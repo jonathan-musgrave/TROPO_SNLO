@@ -1,6 +1,6 @@
 close all;
 clear all;
-addpath(fullfile(cd,'utils'))
+addpath(fullfile('..','utils'))
 
 N.w  = 400; % Time slices 
 N.rt = 500*4; % Round trip number

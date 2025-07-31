@@ -4,40 +4,59 @@ addpath(fullfile('..','utils'))
 
 % Lowerzone soliton dfined by dk*GVDi>0 
 % Upperzon soliton defined by dk*GVDi<0
+%% Do you want to sweep a parameter?
+Sweep_Param = 0;
+param2sweep    = 'crystal.beta2_p'; % Parameter set to sweep;
+sweep_param_ar = [-100,100]*1e-27; % Values to sweep through;
 
-N.w  = 4000; % Time slices 
+%% Parameters that can be tuned:
+N.w  = 1000; % Time slices 
 N.rt = 500*4; % Round trip number
 N.z  = 31; % LNL/N.z = dz;
 lam0.p = 2100e-9;
 lam0.s = 2658.2e-9;
 lam0.i = 1/(1/lam0.p-1/lam0.s);
 
+%%%%%% PUMP AND SEED POWERS IN TERMS OF WATTS %%%%%%
+I0.p = 2.5*5; I0.s = 0; I0.i = 0; % CW pump Powers
+I0.p_seed = I0.p; I0.s_seed = I0.p; I0.i_seed = 0*I0.p; % Pulse seeding power
+I0.t_seed = 1e-12; % FWHM of pulse seed
+
+%%% SET GDD of P,S, I in fs^2/mm; 
+GDD_pump = 281;
+GDD_signal = 213;
+GDD_idler = 1096; crystal.dk = -2*pi; % Upper Zone 
 
 % Resonator construction
 % Resonator loss due to crystal absorptions and/or diffraction
-F = 160;
+F = 160; % Finesse Parameter
 res.alpha_pc = pi/F; 
 res.alpha_sc = pi/F; 
-res.alpha_ic = pi/F;
+res.alpha_ic = pi/F; % Total crystal loss of idler 
 % Resonator coupling
 res.theta_p  = pi/F;
 res.theta_s  = pi/F;
-res.theta_i  = 1;
+res.theta_i  = 1; % Coupling paramter set too 1 for non-resonant
 
 % Decide if simulation will consider GVM
-res.delta_s = -6;
+res.delta_s = -6; % Detuning Parameter in terms of the resonance linewidth
 res.delta_p = lam0.s./lam0.p*res.delta_s;
 res.GVM_on = 0;
 res.delta_i = 0;
-
+%% Other parameters
 % Decide if simulation will consider exteneral GVM and GDD compensation
 res.GVM_comp_on = 0;
 res.GDD_comp_on = 0;
+
 
 % If so, decide on the total % compensation that will be placed externally
 % For example if GDDp = 1ps^2/mm and Lnl = 1mm than a choise of
 % res.GVMp_comp = 1 will apply a compensation of -1ps^2 at the B.C. of the
 % cavity
+% NOTE: if res.GVM_comp_on than there will be no compensation in simulation
+% regardless of the compensation values below. This is also true for the
+% res.GDD_comp_on. For Compensation you must set comp_on = 1 and ALSO
+% define the amount in the below variables
 res.GVMp_comp = 1;
 res.GVMs_comp = 1;
 res.GVMi_comp = 1;
@@ -47,7 +66,6 @@ res.GDDs_comp = 1;
 res.GDDi_comp = 1;
 
 
-crystal.dk = 1*pi; % normalized to crystal length such that dk = crystal.dk/Lnl
 crystal.mode_radius = 3e-6;
 crystal.length = 3e-3;
 crystal.name = 'BGGSE';
@@ -60,15 +78,10 @@ ng_pump = 2.2152;
 ng_signal = 2.2152;
 ng_idler = 2.2152;
 
-%% Run different cases PLotting
 
-I0.p = 1.885*0+2.5*4; I0.s = 0; I0.i = 0; % CW pump Powers
-I0.p_seed = I0.p; I0.s_seed = I0.p; I0.i_seed = 0*I0.p; % Pulse seeding power
-I0.t_seed = 1e-12; % FWHM of pulse seed
-%%%%%%%%%%%%% LowerZone
-GDD_pump = 281;
-GDD_signal = 213;
-GDD_idler = -1096; crystal.dk = 2*pi; % Lower Zone 
+
+
+%%%%%% convert to the units that simulation likes (unnessary to touch)
 c =  2.99792458E8;           % velocity of light in vacuum, m/s
 eps_0 = 8.854E-12;           % dielectric constant in vacuum, F/m
 crystal.beta1_p = (c./ng_pump).^-1; crystal.beta1_s = (c./ng_signal).^-1; crystal.beta1_i = (c./ng_idler).^-1;
@@ -77,31 +90,15 @@ crystal.beta2_p = GDD_pump.*1e-15*1e-15./1e-3; crystal.beta2_s = GDD_signal.*1e-
 
 % Detuning negative
 % Cavity detuning (normalized to linewidth of pump resonance)
-ff = figure(2);
-fig_num = ff.Number;
-TROPO_Generalized(lam0,crystal,I0,res,N)
-ff = gcf;
-run('tilefigs.m')
-%%
-%%%%%%%%%%%%% Upperzone
-N.rt = 500*4; % Round trip number
-I0.p = 2.5*5; I0.s = 0; I0.i = 0; % CW pump Powers
-I0.p_seed = I0.p; I0.s_seed = I0.p; I0.i_seed = 0*I0.p; % Pulse seeding power
-I0.t_seed = 1e-12; % FWHM of pulse seed
 
-GDD_pump = 281;
-GDD_signal = 213;
-GDD_idler = 1096; crystal.dk = -2*pi; % Upper Zone 
-c =  2.99792458E8;           % velocity of light in vacuum, m/s
-eps_0 = 8.854E-12;           % dielectric constant in vacuum, F/m
-crystal.beta1_p = (c./ng_pump).^-1; crystal.beta1_s = (c./ng_signal).^-1; crystal.beta1_i = (c./ng_idler).^-1;
-crystal.beta2_p = GDD_pump.*1e-15*1e-15./1e-3; crystal.beta2_s = GDD_signal.*1e-15*1e-15./1e-3; crystal.beta2_i = GDD_idler.*1e-15*1e-15./1e-3;
-    
-
-% Detuning negative
-% Cavity detuning (normalized to linewidth of pump resonance)
-ff = figure(2);
-fig_num = ff.Number;
-TROPO_Generalized(lam0,crystal,I0,res,N)
-ff = gcf;
-run('tilefigs.m')
+if Sweep_Param
+    timestamp = datestr(now, 'yyyymmdd_HHMMSS'); % For saveDIR
+    SaveDir = fullfile(cd,param2sweep,timestamp);
+    Parameter_Sweep_fx(param2sweep,sweep_param_ar, lam0,crystal,I0,res,N,[], SaveDir)
+else
+    ff = figure(2);
+    fig_num = ff.Number;
+    TROPO_Generalized(lam0,crystal,I0,res,N)
+    ff = gcf;
+    run('tilefigs.m')
+end
