@@ -5,9 +5,22 @@ addpath(fullfile('..','utils'))
 % Lowerzone soliton dfined by dk*GVDi>0 
 % Upperzon soliton defined by dk*GVDi<0
 %% Do you want to sweep a parameter?
-Sweep_Param = 0;
-param2sweep    = 'crystal.beta2_p'; % Parameter set to sweep;
+Sweep_Param = 0; % Set too zero if you do not want to sweep a parameter
+        % note that the parameter value will be set too whatver is defined
+        % below if the sweep_param = 0 else it will sweep through the
+        % sweep_param_ar
+param2sweep    = 'crystal.beta2_p'; % Parameter set to sweep; 
+        % Set this too whatever variable you would like too sweep
+        % For instance if the GDD of pump is swept param2sweep =
+        % 'crystal.beta2_p'. Or say you want to sweep pump power than
+        % param2sweep = 'I0.p';
 sweep_param_ar = [-100,100]*1e-27; % Values to sweep through;
+        % Whatever variable is chosen sweep_param_ar will sweep through
+        % those values for instance if param2sweep    =
+        % 'crystal.beta2_p' than sweep_param_ar will be the desired
+        % sweep_params. The sweep output is saved in a folder at the
+        % parameter swept+datetime of the run and all variables are saved
+        % in ASCI file for later usage.
 
 %% Parameters that can be tuned:
 N.w  = 1000; % Time slices 
